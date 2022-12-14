@@ -31,7 +31,7 @@ app = Flask(__name__)
 global numeroAnimalMobile
 numeroAnimalMobile = 1
 global NUMERO_MAXIMO_MODULOS
-NUMERO_MAXIMO_MODULOS = 3
+NUMERO_MAXIMO_MODULOS = 1
 
 global ESTADO_MODULOS
 ESTADO_MODULOS = []
@@ -94,22 +94,31 @@ def ThreadActualizarSocket():
 	global NUMERO_MAXIMO_MODULOS
 	global tiempo_inicio_por_modulo
 	print("ThreadActualizarSocket Started... ")
-	UDP_IP = socket.gethostbyname(socket.gethostname())
+	UDP_IP = "127.0.0.1" #socket.gethostbyname(socket.gethostname())
+	print(UDP_IP)
 	UDP_PORT = 9001 ## Este puerto debe coincidir con el configurado en el módulo wifi para el envío de datos
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	print(s)
 	s.bind((UDP_IP, UDP_PORT))
 	print("____________________________________________")
-	print("Puerto Abierto")
+	print(f"Puerto Abierto :) en {UDP_IP} en el puerto {UDP_PORT}")
 	print("____________________________________________")	
 
 
 	while True:
+		print("Hello while")
 		lock.acquire()
+		print("After lock")
 		data, addr = s.recvfrom(1024)
+		
+		print("after first data")
 		data = data.decode()
-		file = open("./resultados/datosAccel/completos"+str(TIEMPO_INICIO)+".txt","a") #Se activa (crea) el archivo para guardar (escribir) un nuevo dato
+		#file = open("./resultados/datosAccel/completos"+str(TIEMPO_INICIO)+".txt","a") #Se activa (crea) el archivo para guardar (escribir) un nuevo dato
+		print("Before try")
 		try:
+			print("Datos adquiridos")
 			ArrayData = data.split("#")
+			print(len(ArrayData))
 			Ax = float(ArrayData[0])
 			Ay = float(ArrayData[1])
 			Az = float(ArrayData[2])
@@ -128,13 +137,14 @@ def ThreadActualizarSocket():
 			if ( tiempo_inicio_por_modulo[IdClient]== '0'):
 				tiempo_inicio_por_modulo[IdClient] = time.ctime(time.time())
 				tiempo_ultima_actualizacion_por_modulo = time.time()
-			file.write( ( fechaYhora + "	 %.1f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
-			file.close() #Cada vez que el servidor recibe un dato lo guarda adecuamente en el archivo plano de texto
+			#file.write( ( fechaYhora + "	 %.1f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
+			#file.close() #Cada vez que el servidor recibe un dato lo guarda adecuamente en el archivo plano de texto
 					  	 #para evitar perdidas de datos
 		except Exception as e:
 			print(e)
 			print("Error en dato")
 		lock.release()
+
 threading.Thread(target=ThreadActualizarSocket).start()
 
 ### hilo para realizar predición de estados
@@ -277,6 +287,7 @@ def actualizarGraficas():
 	Gx = nuevaLineaDatos[3]
 	Gy = nuevaLineaDatos[4]
 	Gz = nuevaLineaDatos[5]
+	print(f"Ax: {Ax },Ay: {Ay },Az: {Az }, Gx: {Gx }, Gy: {Gy}, Gz: {Gz}");
 	tiempo = time.time()-TIEMPO_INICIO
 	ListaModulos = range(0, len(ACTIVIDAD_ACTUAL))
 	return json.dumps({'Ax':Ax ,'Ay':Ay ,'Az':Az ,'Gx':Gx ,'Gy':Gy ,'Gz':Gz ,'tiempo':tiempo, 'modulo':modulo,'NUMERO_MAXIMO_MODULOS':NUMERO_MAXIMO_MODULOS, 'ListaModulos':list(ListaModulos), 'nuevaLineaDatos':nuevaLineaDatos});
