@@ -31,7 +31,7 @@ app = Flask(__name__)
 global numeroAnimalMobile
 numeroAnimalMobile = 1
 global NUMERO_MAXIMO_MODULOS
-NUMERO_MAXIMO_MODULOS = 1
+NUMERO_MAXIMO_MODULOS = 2
 
 global ESTADO_MODULOS
 ESTADO_MODULOS = []
@@ -94,7 +94,9 @@ def ThreadActualizarSocket():
 	global NUMERO_MAXIMO_MODULOS
 	global tiempo_inicio_por_modulo
 	print("ThreadActualizarSocket Started... ")
-	UDP_IP = "192.168.0.163" #socket.gethostbyname(socket.gethostname())
+	UDP_IP = "192.168.0.108" #socket.gethostbyname(socket.gethostname())
+	#UDP_IP = socket.gethostbyname(socket.gethostname())
+	#UDP_IP = socket.gethostbyname(socket.gethostname())
 	print(UDP_IP)
 	UDP_PORT = 9001 ## Este puerto debe coincidir con el configurado en el módulo wifi para el envío de datos
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
