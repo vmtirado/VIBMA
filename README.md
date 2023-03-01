@@ -3,12 +3,10 @@
 Proyecto de Grado:
 Monitorio de comportamientoIngestivo Bovinos en Pastoreo
 
-pip install -r requirements.txt
+Instalar docker siguiendo los pasos de 
+https://code.visualstudio.com/docs/devcontainers/containers
 
-tutorial-env\Scripts\activate.bat
-On Unix or MacOS, run:
-
-source tutorial-env/bin/activate
+Instalar plugin en vscode
 
 
 
