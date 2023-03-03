@@ -1,12 +1,13 @@
 # agrosaviaRepositorio
 
-Proyecto de Grado:
-Monitorio de comportamientoIngestivo Bovinos en Pastoreo
+Tesis de maestria: 
+Red federada comportamiento ingestivo de bovinos
 
-Instalar docker siguiendo los pasos de 
+Instalacion:
+- Instalar vscode
+- Instalar docker siguiendo los pasos del siguiente tutorial 
 https://code.visualstudio.com/docs/devcontainers/containers
-
-Instalar plugin en vscode
+- Instalar plugin de docker en vscode
 
 
 
