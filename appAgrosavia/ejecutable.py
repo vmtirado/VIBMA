@@ -31,7 +31,7 @@ app = Flask(__name__)
 global numeroAnimalMobile
 numeroAnimalMobile = 1
 global NUMERO_MAXIMO_MODULOS
-NUMERO_MAXIMO_MODULOS = 2
+NUMERO_MAXIMO_MODULOS = 1
 
 global ESTADO_MODULOS
 ESTADO_MODULOS = []
@@ -62,9 +62,6 @@ tamañoDatosTemporales = np.zeros((NUMERO_MAXIMO_MODULOS, 1)).tolist()
 
 global LISTA_ACTIVIDADES
 global LISTA_LINKS
-#### Comiendo = 0
-#### Rumiando = 1
-#### Nada = 2
 LISTA_ACTIVIDADES = ['Comiendo', 'Rumiando', 'Nada']
 LISTA_LINKS = ['comiendo.png', 'rumia.png', 'caminando.png', 'nada.png']
 
@@ -115,7 +112,7 @@ def ThreadActualizarSocket():
 		
 		print("after first data")
 		data = data.decode()
-		#file = open("./resultados/datosAccel/completos"+str(TIEMPO_INICIO)+".txt","a") #Se activa (crea) el archivo para guardar (escribir) un nuevo dato
+		file = open("./resultados/datosAccel/completos"+str(TIEMPO_INICIO)+".txt","a") #Se activa (crea) el archivo para guardar (escribir) un nuevo dato
 		print("Before try")
 		try:
 			print("Datos adquiridos")
@@ -139,8 +136,8 @@ def ThreadActualizarSocket():
 			if ( tiempo_inicio_por_modulo[IdClient]== '0'):
 				tiempo_inicio_por_modulo[IdClient] = time.ctime(time.time())
 				tiempo_ultima_actualizacion_por_modulo = time.time()
-			#file.write( ( fechaYhora + "	 %.1f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
-			#file.close() #Cada vez que el servidor recibe un dato lo guarda adecuamente en el archivo plano de texto
+			file.write( ( fechaYhora + "	 %.1f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
+			file.close() #Cada vez que el servidor recibe un dato lo guarda adecuamente en el archivo plano de texto
 					  	 #para evitar perdidas de datos
 		except Exception as e:
 			print(e)

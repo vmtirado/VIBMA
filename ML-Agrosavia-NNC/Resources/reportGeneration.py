@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import seaborn as sns
 import pandas
-from sklearn.externals import joblib
-import pickle
+import pickle 
 
 class report:
 	def __init__(self):
