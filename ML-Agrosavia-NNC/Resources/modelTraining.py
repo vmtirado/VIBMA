@@ -462,7 +462,7 @@ def algorithConvolutionNeuralNetwork(configuration, X, Y, resultsToReport):
 
 	for i in range(0, cantidadTotalDatos-100,10):
 		a = np.array(datosnp[i:i+100,:])
-		a = a.astype(np.float)
+		a = a.astype(float)
 		p = int(labelsnp[i] )
 		matrices.append(a)
 		labels.append(p)

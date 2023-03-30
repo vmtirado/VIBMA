@@ -176,7 +176,7 @@ class report:
 		ax1.set_xlabel('$x_1$' , fontsize=18)
 		ax1.set_ylabel('$x_6$' , fontsize=18)
 		ax1.minorticks_on()
-		ax1.grid(b=True, which='minor', color='#999999', linestyle='-', alpha=0.2)
+		ax1.grid( which='minor', color='#999999', linestyle='-', alpha=0.2)
 
 		volume =  self.dataResults['X'][:,0]
 		amount =  self.dataResults['X'][:,4]
