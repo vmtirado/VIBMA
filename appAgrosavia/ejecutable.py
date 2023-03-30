@@ -105,9 +105,7 @@ def ThreadActualizarSocket():
 
 
 	while True:
-		print("Hello while")
 		lock.acquire()
-		print("After lock")
 		data, addr = s.recvfrom(1024)
 		
 		print("after first data")
@@ -124,6 +122,9 @@ def ThreadActualizarSocket():
 			Gx = float(ArrayData[3])
 			Gy = float(ArrayData[4])
 			Gz = float(ArrayData[5])
+#			Mx = float(ArrayData[5])
+#			My = float(ArrayData[5])
+#			Mz = float(ArrayData[5])
 			IdClient = int(ArrayData[6])-1
 			NumeroPaquete = float(ArrayData[7])
 			fechaYhora = str(time.strftime("%c"))
@@ -136,6 +137,9 @@ def ThreadActualizarSocket():
 			if ( tiempo_inicio_por_modulo[IdClient]== '0'):
 				tiempo_inicio_por_modulo[IdClient] = time.ctime(time.time())
 				tiempo_ultima_actualizacion_por_modulo = time.time()
+			#Write file con magnometro 	
+#			file.write( ( fechaYhora + "	 %.1f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz,Mx, My, Mz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
+            #Write file sin magnometro
 			file.write( ( fechaYhora + "	 %.1f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
 			file.close() #Cada vez que el servidor recibe un dato lo guarda adecuamente en el archivo plano de texto
 					  	 #para evitar perdidas de datos
