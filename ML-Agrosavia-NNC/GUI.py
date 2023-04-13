@@ -62,10 +62,9 @@ class MainGUI:
 		self.imgLogo = ImageTk.PhotoImage(Image.open("./Resources/logo.jpg").resize((209, 50), Image.BICUBIC))
 		self.logo = Label(self.root, image = self.imgLogo, borderwidth=0).pack(side=TOP, padx=10, pady=(25,10), expand=YES)
 
-
-
+		#Search var for CSV
 		self.frame = Frame(self.root, background='white')
-		Label(self.frame, text = "File:  ", background='white', borderwidth=0).pack(side=LEFT)
+		Label(self.frame, text = "CSV:  ", background='white', borderwidth=0).pack(side=LEFT)
 		self.filename_Entry = tk.Entry(self.frame)
 		self.filename_Entry.bindtags((str(self.filename_Entry), str(self.frame), "all"))
 		self.filename_Entry.pack(side=LEFT, fill=BOTH, expand=YES)
@@ -74,8 +73,19 @@ class MainGUI:
 		self.imgSearchButton.pack(side=LEFT)
 		self.frame.pack(fill=BOTH, expand=True, pady=(30,0),padx=(18,25))
 
-		
+		#Search bar for neural network configuration
+		self.frame_conf = Frame(self.root, background='white')
+		Label(self.frame_conf, text = "Conf:  ", background='white', borderwidth=0).pack(side=LEFT)
+		self.filename_Entry_conf = tk.Entry(self.frame_conf)
+		self.filename_Entry_conf.bindtags((str(self.filename_Entry_conf), str(self.frame_conf), "all"))
+		self.filename_Entry_conf.pack(side=LEFT, fill=BOTH, expand=YES)
+		self.imgSeach_conf = ImageTk.PhotoImage(Image.open("./Resources/search.png").resize((20, 20), Image.BICUBIC))
+		self.imgSearchButton_conf = Button(self.frame_conf, command = self.openFileChooserConf, image = self.imgSeach_conf)
+		self.imgSearchButton_conf.pack(side=LEFT)
+		self.frame_conf.pack(fill=BOTH, expand=True, pady=(30,0),padx=(18,25))
 
+		
+		#Button for procces data
 		self.processButton = Button(self.root, command=self.processData, text = "Process data from file", width=24)
 		self.processButton.pack(pady=30, expand=YES)
 
@@ -103,6 +113,7 @@ class MainGUI:
 		CR_dialog = infoDialog(self.root, "© Info Copyright")
 		self.root.wait_window(CR_dialog.top)
 
+	#File chooser for data csv
 	def openFileChooser(self):
 		self.root.filename = filedialog.askopenfilename(initialdir = ".",title = "Select file",filetypes = (("CSV files","*.csv"),("Excel files","*.xls *.xlsx")))
 		if self.root.filename:
@@ -110,6 +121,15 @@ class MainGUI:
 			self.filename_Entry.delete(0, tk.END)
 			self.filename_Entry.insert(0, self.root.filename.split("/")[-2]+"/"+self.root.filename.split("/")[-1])
 
+	#File chooser for configuration file	
+	def openFileChooserConf(self):
+		self.root.filename_conf = filedialog.askopenfilename(initialdir = ".",title = "Select file",filetypes = (('text files', '*.txt'),('All files', '*.*') ))
+		if self.root.filename_conf:
+			self.logConsole("Selected file: "+self.root.filename_conf.split("/")[-1])
+			self.filename_Entry_conf.delete(0, tk.END)
+			self.filename_Entry_conf.insert(0, self.root.filename_conf.split("/")[-2]+"/"+self.root.filename.split("/")[-1])
+
+	#Previous method for data procesing shows different pop up windows to proccess data 
 	def processData(self):
 		self.processButton.config(state=DISABLED)
 		self.imgSearchButton.config(state=DISABLED)
@@ -132,13 +152,16 @@ class MainGUI:
 			self.root.update()
 			if self.df.shape[1]%10 != 0:
 				raise Exception("Data format error")
-
+			
+			#Creates an empty dataframe to store information
 			self.dataFrames = []
+			#Appends the names row to the first row of the dataframe
 			for module in range(int(self.df.shape[1]/10)):
 				actualDF = self.df[[(x+10*module) for x in range(10)]]
 				actualDF.columns = ['date','module','packet', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'action']
 				self.dataFrames.append(actualDF)
 
+			#drops empty rows
 			self.logConsole("Dropping empty rows")
 			for x in range(len(self.dataFrames)):
 				self.dataFrames[x] = self.dataFrames[x].dropna(axis=0, how='all')
@@ -148,7 +171,7 @@ class MainGUI:
 			for x in range(len(self.dataFrames)):
 				self.logConsole("Rows in module "+str(x+1)+": "+str(self.dataFrames[x].shape[0]))
 			
-
+			#Selection of the procesing type
 			d_DP = optionDialog(self.root, "What kind of data processing should I use?", self.optionsDataProcessing)
 			self.root.wait_window(d_DP.top)
 			self.dataProcessing = d_DP.getValue()
@@ -169,15 +192,6 @@ class MainGUI:
 				self.imgSearchButton.config(state=NORMAL)
 				return
 
-			#Configuration windows
-			# if self.algorithm == 0: #Random Forest config
-			# 	RF_config = randomForestConfigDialog(self.root, len(self.dataFrames))
-			# 	self.root.wait_window(RF_config.top)
-			# 	self.configuration = RF_config.getConfiguration()
-			# elif self.algorithm == 1: #Neural Network config
-			# 	NN_config = neuralNetworkConfigDialog(self.root, len(self.dataFrames))
-			# 	self.root.wait_window(NN_config.top)
-			# 	self.configuration = NN_config.getConfiguration()
 			if self.algorithm == 0: #Convolutional Neural Network config
 				CNN_config = convolutionNeuralNetworkConfigDialog(self.root, len(self.dataFrames))
 				self.root.wait_window(CNN_config.top)
@@ -207,7 +221,7 @@ class MainGUI:
 			
 			self.model = trainModel(self.dataFrames, self.dataProcessing, self.algorithm, self.configuration)
 			self.logConsole("Training completed successfully!")
-
+			
 			self.logConsole("Generating plots and model analysis")
 			self.root.update()
 
@@ -226,6 +240,118 @@ class MainGUI:
 			print("ERROR: ",str(e))
 			raise e
 
+
+
+	#New method of process data gets the structure of the NN from a text file
+	def processInformation(self):
+		self.processButton.config(state=DISABLED)
+		self.imgSearchButton.config(state=DISABLED)
+		self.logConsole("---------------------------")
+		if self.root.filename.endswith("csv"):
+			self.logConsole("Processing "+self.root.filename.split("/")[-1])
+			self.root.update()
+			self.df = pd.read_csv(self.root.filename, header=None)
+		elif self.root.filename.endswith("xls") or self.root.filename.endswith("xlsx"):
+			self.logConsole("Processing "+self.root.filename.split("/")[-1])
+			self.root.update()
+			self.df = pd.read_excel(self.root.filename, header=None)
+		else:
+			self.logConsole("Wrong file format", error=True)
+			self.processButton.config(state=NORMAL)
+			self.imgSearchButton.config(state=NORMAL)
+			return
+		try:
+			self.logConsole("Counting and sorting module data")
+			self.root.update()
+			if self.df.shape[1]%10 != 0:
+				raise Exception("Data format error")
+			
+			#Creates an empty dataframe to store information
+			self.dataFrames = []
+			#Appends the names row to the first row of the dataframe
+			for module in range(int(self.df.shape[1]/10)):
+				actualDF = self.df[[(x+10*module) for x in range(10)]]
+				actualDF.columns = ['date','module','packet', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'action']
+				self.dataFrames.append(actualDF)
+
+			#drops empty rows
+			self.logConsole("Dropping empty rows")
+			for x in range(len(self.dataFrames)):
+				self.dataFrames[x] = self.dataFrames[x].dropna(axis=0, how='all')
+				self.dataFrames[x] = self.dataFrames[x].reset_index(drop=True)
+			
+			self.logConsole("Modules detected: "+str(len(self.dataFrames)))
+			for x in range(len(self.dataFrames)):
+				self.logConsole("Rows in module "+str(x+1)+": "+str(self.dataFrames[x].shape[0]))
+			
+			#Selection of the procesing type
+			d_DP = optionDialog(self.root, "What kind of data processing should I use?", self.optionsDataProcessing)
+			self.root.wait_window(d_DP.top)
+			self.dataProcessing = d_DP.getValue()
+
+			if self.dataProcessing == -1:
+				self.logConsole("Processing cancelled")
+				self.processButton.config(state=NORMAL)
+				self.imgSearchButton.config(state=NORMAL)
+				return
+
+			d_ML = optionDialog(self.root, "Select a Machine Learning algorithm", self.optionsAlgorithm)
+			self.root.wait_window(d_ML.top)
+			self.algorithm = d_ML.getValue()
+
+			if self.algorithm == -1:
+				self.logConsole("Processing cancelled")
+				self.processButton.config(state=NORMAL)
+				self.imgSearchButton.config(state=NORMAL)
+				return
+
+			if self.algorithm == 0: #Convolutional Neural Network config
+				CNN_config = convolutionNeuralNetworkConfigDialog(self.root, len(self.dataFrames))
+				self.root.wait_window(CNN_config.top)
+				self.configuration = CNN_config.getConfiguration()
+			else:
+				self.configuration = {}
+				raise Exception("Internal Error")
+
+			if self.configuration == -1:
+				self.logConsole("Processing cancelled")
+				self.processButton.config(state=NORMAL)
+				self.imgSearchButton.config(state=NORMAL)
+				return
+
+			self.logConsole("Data processing: " + self.optionsDataProcessing[self.dataProcessing])
+			self.logConsole("Algorithm: " + self.optionsAlgorithm[self.algorithm])
+
+			for key, value in self.configuration.items():
+				if key == "Layers":
+					for keyL, valueL in value.items():
+						self.logConsole( keyL+" -> Neurons: "+str(valueL[0]+"  Act. Fn: "+valueL[1]))
+				else:
+					self.logConsole( key+": "+str(value).strip("[").strip("]") )
+
+			self.logConsole("TRAINING...")
+			self.root.update()
+			
+			self.model = trainModel(self.dataFrames, self.dataProcessing, self.algorithm, self.configuration)
+			self.logConsole("Training completed successfully!")
+			
+			self.logConsole("Generating plots and model analysis")
+			self.root.update()
+
+			self.folder = plotAndAnalysis(self)
+			self.logConsole("Plots and analysis generated")
+			self.logConsole("Folder: "+self.folder)
+
+			self.processButton.config(state=NORMAL)
+			self.imgSearchButton.config(state=NORMAL)
+
+
+		except Exception as e:
+			self.logConsole("Critical ERROR in data", error = True)
+			self.processButton.config(state=NORMAL)
+			self.imgSearchButton.config(state=NORMAL)
+			print("ERROR: ",str(e))
+			raise e
 	def logConsole(self, text, error = False):
 		self.console.insert(END, "\n"+text)
 		self.console.see(END)

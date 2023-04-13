@@ -110,7 +110,7 @@ def ThreadActualizarSocket():
 		
 		print("after first data")
 		data = data.decode()
-		file = open("./resultados/datosAccel/completos"+str(TIEMPO_INICIO)+".txt","a") #Se activa (crea) el archivo para guardar (escribir) un nuevo dato
+		file = open("./resultados/datosAccel/completos"+str(TIEMPO_INICIO)+".csv","a") #Se activa (crea) el archivo para guardar (escribir) un nuevo dato
 		print("Before try")
 		try:
 			print("Datos adquiridos")
@@ -140,7 +140,7 @@ def ThreadActualizarSocket():
 			#Write file con magnometro 	
 #			file.write( ( fechaYhora + "	 %.1f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz,Mx, My, Mz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
             #Write file sin magnometro
-			file.write( ( fechaYhora + "	 %.1f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
+			file.write( ( fechaYhora + ","+ "%.1f, %.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
 			file.close() #Cada vez que el servidor recibe un dato lo guarda adecuamente en el archivo plano de texto
 					  	 #para evitar perdidas de datos
 		except Exception as e:

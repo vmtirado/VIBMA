@@ -56,15 +56,20 @@ feat_labels = [ "X1" , "X2", "X3" , "X4", "X5", "X6"]
 #configuration {'% Train': '70', '# of Trainings': '3', 'Hyperparameter optimization': True, 'Active Module IDs': [1, 2]}
 # neural network
 # configuration {'% Train': '0', 'Total layers': 1, 'Layers': {'Layer 1': ['0', 'Sigmoidal']}, 'Active Module IDs': [1, 2]}
-def trainModel(pDataFrames, pDataProcessing, pAlgorithm, configuration):
+def trainModel(pDataFrames, pDataProcessing, pAlgorithm, pConfiguration):
 	time.sleep(2)
 	print("--------------------------------------------------------")
 	print("Start: Training Model")
+	print("--------------------------------------------------------")
+	print("--------------------------------------------------------")
+	print("Configuration file: ",)
+	print(pConfiguration)
 	print("--------------------------------------------------------")
 	#print("pDataFrames",pDataFrames)
 	resultsToReport = { }
 
 	activeModules = configuration['Active Module IDs']
+	print(activeModules)
 	#print("activeModules",activeModules)
 
 	X = []
@@ -131,7 +136,8 @@ def trainModel(pDataFrames, pDataProcessing, pAlgorithm, configuration):
 	print("--------------------------------------------------------")
 	print("Model Training finished successful ")
 	print("--------------------------------------------------------")
-	print("resultsToReport", resultsToReport)
+	#THIS OBJECT CONTAINS ALL THE RESULTS OF THE NEURAL NETWORK!!!!!!!!!!!!!!
+	#print("resultsToReport", resultsToReport)
 	print("resultsToReport len", len(resultsToReport))
 
 	return resultsToReport
@@ -469,38 +475,38 @@ def algorithConvolutionNeuralNetwork(configuration, X, Y, resultsToReport):
 		
 	matrices = np.array(matrices)
 	labels = np.array(labels)
-	print('matrices', matrices.shape)
-	print('labels', labels.shape)
+	#print('matrices', matrices.shape)
+	#print('labels', labels.shape)
 
 	X_train, X_test, Y_train, Y_test = train_test_split(matrices, labels, test_size=percentageTest, random_state=0)
 	xtrainShape = X_train.shape[0]
 	ytrainShape = X_test.shape[0]
-	print('There are', X_train.shape[0], 'training data and',  X_test.shape[0], 'testing data.')
-	print(np.vstack((np.unique(Y_train), np.bincount(Y_train))).T)
+	#print('There are', X_train.shape[0], 'training data and',  X_test.shape[0], 'testing data.')
+	#print(np.vstack((np.unique(Y_train), np.bincount(Y_train))).T)
 	arregloCuentas = np.vstack((np.unique(Y_train), np.bincount(Y_train))).T
-	print('X_train.shape',X_train.shape)
+	#print('X_train.shape',X_train.shape)
 	X_train = X_train.reshape(X_train.shape[0],100,6,1)
 	X_test = X_test.reshape(X_test.shape[0],100,6,1)
-	print('X_train.shape',X_train.shape)
+	#print('X_train.shape',X_train.shape)
 
 
 	#one-hot encode target column
 	Y_train = to_categorical(Y_train)
 	Y_test = to_categorical(Y_test)
-	print(Y_train[0])
+	#print(Y_train[0])
 
 	totalLayers = configuration['Total layers']
 	infoLayers = configuration['Layers']
 	nNeuronsTodas = []
 	nfunctionTodas = []
 	for i in range(1,totalLayers+1):
-		print("layer ", i)
+		#print("layer ", i)
 		nNeuronsi = infoLayers[ str('Layer ' + str(i) ) ][0]
-		print("neuronas", nNeuronsi )
+		#print("neuronas", nNeuronsi )
 		nNeuronsTodas.append(int(nNeuronsi))
 		functionActivationi = infoLayers[ str('Layer ' + str(i) ) ][1]
 		nfunctionTodas.append(functionActivationi)
-		print("function", functionActivationi )
+		#print("function", functionActivationi )
 
 	print('nNeuronsTodas',nNeuronsTodas)
 	if (totalLayers == 1):
@@ -526,8 +532,8 @@ def algorithConvolutionNeuralNetwork(configuration, X, Y, resultsToReport):
 	#print(Y_test[:4])
 
 	test_eval = model.evaluate(X_test, Y_test, verbose=0)
-	print('Test loss:', test_eval[0])
-	print('Test accuracy:', test_eval[1])
+	#print('Test loss:', test_eval[0])
+	#print('Test accuracy:', test_eval[1])
 		# Matriz de confusion
 	print("""
 		Graph confusion matrix...
@@ -535,15 +541,15 @@ def algorithConvolutionNeuralNetwork(configuration, X, Y, resultsToReport):
 	#tabla=pd.crosstab(Y_test.ravel(), y_pred, rownames=['Actual LOS'], colnames=['Predicted LOS'])
 	#print(tabla*100/len(y_pred))
 	from sklearn.metrics import confusion_matrix
-	print('Confusion Matrix')
-	print('Y_test',np.argmax(Y_test, axis=1))
-	print('y_pred', np.argmax(y_pred, axis=1) )
+	#print('Confusion Matrix')
+	#print('Y_test',np.argmax(Y_test, axis=1))
+	#print('y_pred', np.argmax(y_pred, axis=1) )
 	confusion = confusion_matrix(np.argmax(Y_test, axis=1), np.argmax(y_pred, axis=1))
-	print('confusion',confusion*100/len(y_pred))
+	#print('confusion',confusion*100/len(y_pred))
 
 	predicted_classes = model.predict(X_test)
 	predicted_classes = np.argmax(np.round(predicted_classes),axis=1)
-	print(predicted_classes.shape, Y_test.shape)
+	#print(predicted_classes.shape, Y_test.shape)
 	resultsToReport['X_train']=X_train
 	resultsToReport['X_test']=X_test
 	resultsToReport['Y_train']=Y_train
@@ -555,6 +561,7 @@ def algorithConvolutionNeuralNetwork(configuration, X, Y, resultsToReport):
 	resultsToReport['arregloCuentas'] = arregloCuentas
 	resultsToReport['Condusionmatrix'] = confusion*100/len(y_pred)
 	resultsToReport['model'] = model
+	print("END.........................................................")
 
 	return resultsToReport
 
