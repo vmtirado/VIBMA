@@ -30,11 +30,11 @@ const float AccelScaleFactor = 16384.0;
 const float GyroScaleFactor =131;
 
 
-//const char* ssid = "Ventana 2";
-//const char* password = "2858351Qv"; 
+const char* ssid = "Ventana 2";
+const char* password = "2858351Qv"; 
 
-const char* ssid = "Agrosavia2.4G";
-const char* password = "Agrosavia"; 
+//const char* ssid = "Agrosavia2.4G";
+//const char* password = "Agrosavia"; 
 
 int Id_client= 1; //Identificador del cliente
 int p = 0; // Identificador del paquete enviado 
@@ -44,23 +44,23 @@ WiFiUDP Udp;
 
 void setup() {
 ////////////////////////SET UP ACELEROMETRO////////////////////////////////////////
-  // put your setup code here, to run once:
-   Serial.begin(115200);
-   Wire.begin();
-   Serial.println("setting up");
-   //setupMPU();
- //Seting pin mode 
+// put your setup code here, to run once:
+ Serial.begin(115200);
+ Wire.begin();
+ Serial.println("setting up");
+ //setupMPU();
+//Seting pin mode 
 pinMode(led_conn, OUTPUT);
 // pinMode(LED1, OUTPUT);
 
 
-   // Configurar acelerometro
-   I2CwriteByte(MPU9250_ADDRESS, 28, ACC_FULL_SCALE_16_G);
-   // Configurar giroscopio
-   I2CwriteByte(MPU9250_ADDRESS, 27, GYRO_FULL_SCALE_2000_DPS);
-   // Configurar magnetometro
-   I2CwriteByte(MPU9250_ADDRESS, 0x37, 0x02);
-   I2CwriteByte(MAG_ADDRESS, 0x0A, 0x01);
+ // Configurar acelerometro
+ I2CwriteByte(MPU9250_ADDRESS, 28, ACC_FULL_SCALE_4_G);
+ // Configurar giroscopio
+ I2CwriteByte(MPU9250_ADDRESS, 27, GYRO_FULL_SCALE_500_DPS);
+ // Configurar magnetometro
+ I2CwriteByte(MPU9250_ADDRESS, 0x37, 0x02);
+ I2CwriteByte(MAG_ADDRESS, 0x0A, 0x01);
 
 
 ////////////////////////SET UP WIFI////////////////////////////////////////
@@ -99,20 +99,20 @@ void loop() {
 
 
    // ---  Lectura acelerometro y giroscopio --- 
-   uint8_t Buf[14];
-   I2Cread(MPU9250_ADDRESS, 0x3B, 14, Buf);
+   uint8_t buff[14];
+   I2Cread(MPU9250_ADDRESS, 0x3B, 14, buff);
 
    // Convertir registros acelerometro
    //Serial.println("Acelerometro");
-   int16_t ax = -(Buf[0] << 8 | Buf[1]);
-   int16_t ay = -(Buf[2] << 8 | Buf[3]);
-   int16_t az = Buf[4] << 8 | Buf[5];
+   int16_t ax = (buff[0] << 8 | buff[1]);
+   int16_t ay = (buff[2] << 8 | buff[3]);
+   int16_t az = (buff[4] << 8 | buff[5]);
 
    // Convertir registros giroscopio
    //Serial.println("Giroscopio");
-   int16_t gx = -(Buf[8] << 8 | Buf[9]);
-   int16_t gy = -(Buf[10] << 8 | Buf[11]);
-   int16_t gz = Buf[12] << 8 | Buf[13];
+   int16_t gx = (buff[8] << 8 | buff[9]);
+   int16_t gy = (buff[10] << 8 | buff[11]);
+   int16_t gz = (buff[12] << 8 | buff[13]);
 
 
 
@@ -133,7 +133,8 @@ void loop() {
 //   int16_t my = -(Mag[1] << 8 | Mag[0]);
 //   int16_t mz = -(Mag[5] << 8 | Mag[4]);
 
-
+//processAccelData()
+//processGyroData()
 //  printData();
 
   Udp.beginPacket("192.168.0.108", 9001); 
@@ -158,16 +159,6 @@ void loop() {
   delay(10);
 }
 
-void setupMPU(){
-  Serial.println("Setting up");
-   // Configurar acelerometro
-   I2CwriteByte(MPU9250_ADDRESS, 28, ACC_FULL_SCALE_16_G);
-   // Configurar giroscopio
-   I2CwriteByte(MPU9250_ADDRESS, 27, GYRO_FULL_SCALE_2000_DPS);
-   // Configurar magnetometro
-   I2CwriteByte(MPU9250_ADDRESS, 0x37, 0x02);
-   I2CwriteByte(MAG_ADDRESS, 0x0A, 0x01);
-}
 
 
 //Funcion auxiliar lectura
@@ -194,67 +185,16 @@ void I2CwriteByte(uint8_t Address, uint8_t Register, uint8_t Data)
    Wire.endTransmission();
 }
 
-void recordRegisters() {
-  Serial.println("Record registers :D");
-   // ---  Lectura acelerometro y giroscopio --- 
-   uint8_t Buf[14];
-   I2Cread(MPU9250_ADDRESS, 0x3B, 14, Buf);
 
-   // Convertir registros acelerometro
-   //Serial.println("Acelerometro");
-   int16_t ax = -(Buf[0] << 8 | Buf[1]);
-   int16_t ay = -(Buf[2] << 8 | Buf[3]);
-   int16_t az = Buf[4] << 8 | Buf[5];
-
-   // Convertir registros giroscopio
-   //Serial.println("Giroscopio");
-   int16_t gx = -(Buf[8] << 8 | Buf[9]);
-   int16_t gy = -(Buf[10] << 8 | Buf[11]);
-   int16_t gz = Buf[12] << 8 | Buf[13];
-
-
-
-   // ---  Lectura del magnetometro --- 
-   uint8_t ST1;
-   do
-   {
-      I2Cread(MAG_ADDRESS, 0x02, 1, &ST1);
-   } while (!(ST1 & 0x01));
-
-   uint8_t Mag[7];
-   I2Cread(MAG_ADDRESS, 0x03, 7, Mag);
-
-
-   // Convertir registros magnetometro
-   //Serial.println("Magnometro");
-   int16_t mx = -(Mag[3] << 8 | Mag[2]);
-   int16_t my = -(Mag[1] << 8 | Mag[0]);
-   int16_t mz = -(Mag[5] << 8 | Mag[4]);
-
-
-   //Serial.println("End record registers :D");
-
-}
 
 //void processAccelData(){
-//  Ax = accelX / AccelScaleFactor;
-//  Ay = accelY / AccelScaleFactor; 
-//  Az = accelZ / AccelScaleFactor;
+//  Ax = ax / AccelScaleFactor;
+//  Ay = ay / AccelScaleFactor; 
+//  Az = az / AccelScaleFactor;
 //}
 //
-//void recordGyroRegisters() {
-//  Wire.beginTransmission(0b1101000); //I2C address of the MPU
-//  Wire.write(0x43); //Starting register for Gyro Readings
-//  Wire.endTransmission();
-//  Wire.requestFrom(0b1101000,6); //Request Gyro Registers (43 - 48)
-//  while(Wire.available() < 6);
-//  gyroX = Wire.read()<<8|Wire.read(); //Store first two bytes into accelX
-//  gyroY = Wire.read()<<8|Wire.read(); //Store middle two bytes into accelY
-//  gyroZ = Wire.read()<<8|Wire.read(); //Store last two bytes into accelZ
-//  processGyroData();
-//  delay(1000);
-//}
 //
+////
 //void processGyroData() {
 //  Gx = gyroX / GyroScaleFactor;
 //  Gy = gyroY / GyroScaleFactor; 
