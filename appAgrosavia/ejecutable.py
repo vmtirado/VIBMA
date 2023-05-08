@@ -122,6 +122,8 @@ def ThreadActualizarSocket():
 			Gx = float(ArrayData[3])
 			Gy = float(ArrayData[4])
 			Gz = float(ArrayData[5])
+			ang_x=float(ArrayData[8])
+			ang_y=float(ArrayData[9])
 #			Mx = float(ArrayData[5])
 #			My = float(ArrayData[5])
 #			Mz = float(ArrayData[5])
@@ -140,7 +142,10 @@ def ThreadActualizarSocket():
 			#Write file con magnometro 	
 #			file.write( ( fechaYhora + "	 %.1f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz,Mx, My, Mz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
             #Write file sin magnometro
-			file.write( ( fechaYhora + ","+ "%.1f, %.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
+			#file.write( ( fechaYhora + ","+ "%.1f, %.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
+			
+			#Write con filtro complementario 
+			file.write( ( fechaYhora + ","+ "%.1f, %.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz,ang_x,ang_y) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
 			file.close() #Cada vez que el servidor recibe un dato lo guarda adecuamente en el archivo plano de texto
 					  	 #para evitar perdidas de datos
 		except Exception as e:
@@ -172,14 +177,14 @@ def ThreadMLC():
 		loaded_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 	except Exception as inst:
-	 	print("No se cargó el modelo")
-	 	print(type(inst))    # la instancia de excepción
-	 	print(inst.args)     # argumentos guardados en .args
-	 	print(inst)          # __str__ permite imprimir args directamente,
+		print("No se cargó el modelo")
+		print(type(inst))    # la instancia de excepción
+		print(inst.args)     # argumentos guardados en .args
+		print(inst)          # __str__ permite imprimir args directamente,
 	else:
-	 	print("____________________________________________")
-	 	print("MODELO CARGADO")
-	 	print("____________________________________________")	
+		print("____________________________________________")
+		print("MODELO CARGADO")
+		print("____________________________________________")	
 
 
 	while True:
