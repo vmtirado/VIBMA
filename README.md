@@ -1,7 +1,7 @@
 # BoVine Ingestive Behavior Measurement and Analysis (VIBMA)
 
 Tesis de maestria: 
-Red federada comportamiento ingestivo de bovinos
+Red en split comportamiento ingestivo de bovinos
 
 Instalacion:
 - Instalar vscode
