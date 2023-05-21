@@ -33,9 +33,11 @@ float ang_x_prev, ang_y_prev;
 const float AccelScaleFactor = 8192.0;
 const float GyroScaleFactor =65.5;
 
+const char* ssid = "QV_2G";
+const char* password = "2858351qv";
 
-const char* ssid = "Ventana 2";
-const char* password = "2858351Qv"; 
+//const char* ssid = "Ventana 2";
+//const char* password = "2858351Qv"; 
 
 //const char* ssid = "Agrosavia2.4G";
 //const char* password = "Agrosavia"; 
@@ -161,7 +163,7 @@ void loop() {
 
   delay(100);
 //Envio de datos 
-  Udp.beginPacket("192.168.0.108", 9001); 
+  Udp.beginPacket("192.168.1.113", 9001); 
   //Udp.beginPacket("127.0.0.1", 9001);  //// Esta ip es la ip del computador servidor y el puerto debe coincidir
   digitalWrite(led_conn, HIGH);
   Serial.println("Start envio paquete");

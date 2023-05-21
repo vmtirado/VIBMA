@@ -91,7 +91,7 @@ def ThreadActualizarSocket():
 	global NUMERO_MAXIMO_MODULOS
 	global tiempo_inicio_por_modulo
 	print("ThreadActualizarSocket Started... ")
-	UDP_IP = "192.168.0.108" #socket.gethostbyname(socket.gethostname())
+	UDP_IP = "192.168.1.113" #socket.gethostbyname(socket.gethostname())
 	#UDP_IP = socket.gethostbyname(socket.gethostname())
 	#UDP_IP = socket.gethostbyname(socket.gethostname())
 	print(UDP_IP)
