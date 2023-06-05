@@ -135,8 +135,22 @@ pinMode(led_conn, OUTPUT);
  I2CwriteByte(MPU9250_ADDRESS, 0x37, 0x02);
  I2CwriteByte(MAG_ADDRESS, 0x0A, 0x01);
 
-   Serial.println("Setup complete");
+Serial.println("Setup complete");
+model = tflite::GetModel(g_model);
+  if (model->version() != TFLITE_SCHEMA_VERSION) {
+    Serial.println("Model schema mismatch!");
+    while (1);
+  }
 
+  // Create an interpreter to run the model
+  tflInterpreter = new tflite::MicroInterpreter(model, tflOpsResolver, tensorArena, tensorArenaSize, &tflErrorReporter);
+
+  // Allocate memory for the model's input and output tensors
+  tflInterpreter->AllocateTensors();
+
+  // Get pointers for the model's input and output tensors
+  tflInputTensor = tflInterpreter->input(0);
+  tflOutputTensor = tflInterpreter->output(0);
 
 }
 
@@ -185,4 +199,3 @@ void loop() {
   Serial.println(msg);
   delay(10);
 }
-
