@@ -39,6 +39,11 @@ float ang_x, ang_y;
 float ang_x_prev, ang_y_prev;
 const float AccelScaleFactor = 8192.0;
 const float GyroScaleFactor =65.5;
+const int ACCELEROMETER_MAXIMUM=4; //g
+const int GYRO_MAXIMUM=500;
+
+const int numSamples = 15;
+int samplesRead = numSamples;
 
 const char* ssid = "QV_2G";
 const char* password = "2858351qv";
@@ -78,6 +83,9 @@ const char* GESTURES[] = {
   "front_15"
 };
 
+#define NUM_GESTURES (sizeof(GESTURES) / sizeof(GESTURES[0]))
+
+
 //Funcion auxiliar lectura
 void I2Cread(uint8_t Address, uint8_t Register, uint8_t Nbytes, uint8_t* Data)
 {
@@ -101,6 +109,26 @@ void I2CwriteByte(uint8_t Address, uint8_t Register, uint8_t Data)
    Wire.write(Data);
    Wire.endTransmission();
 }
+void readData(){
+
+
+   // ---  Lectura acelerometro y giroscopio --- 
+   uint8_t buff[14];
+   I2Cread(MPU9250_ADDRESS, 0x3B, 14, buff);
+
+   // Convertir registros acelerometro
+   //Serial.println("Acelerometro");
+    ax = (buff[0] << 8 | buff[1]);
+    ay = (buff[2] << 8 | buff[3]);
+    az = (buff[4] << 8 | buff[5]);
+
+   // Convertir registros giroscopio
+   //Serial.println("Giroscopio");
+    gx = (buff[8] << 8 | buff[9]);
+    gy = (buff[10] << 8 | buff[11]);
+    gz = (buff[12] << 8 | buff[13]);
+}
+
 void processAccelData(){
   Ax = ax / AccelScaleFactor;
   Ay = ay / AccelScaleFactor; 
@@ -141,6 +169,7 @@ model = tflite::GetModel(g_model);
     Serial.println("Model schema mismatch!");
     while (1);
   }
+Serial.println("Model version correct");
 
   // Create an interpreter to run the model
   tflInterpreter = new tflite::MicroInterpreter(model, tflOpsResolver, tensorArena, tensorArenaSize, &tflErrorReporter);
@@ -151,6 +180,7 @@ model = tflite::GetModel(g_model);
   // Get pointers for the model's input and output tensors
   tflInputTensor = tflInterpreter->input(0);
   tflOutputTensor = tflInterpreter->output(0);
+Serial.println("Tf lite setup ended correctly");
 
 }
 
@@ -158,28 +188,57 @@ model = tflite::GetModel(g_model);
 String msg = "";
 void loop() {
 
+  while (samplesRead == numSamples) {
+    samplesRead=0;
+  }
+  
+ while (samplesRead < numSamples) {
+    // check if new acceleration AND gyroscope data is available
+      // read the acceleration and gyroscope data
+      
+         // ---  Lectura acelerometro y giroscopio --- 
+	   uint8_t buff[14];
+	   I2Cread(MPU9250_ADDRESS, 0x3B, 14, buff);
+     readData();
+     processAccelData();
+     processGyroData();
+  delay(100);
+//Envio de datos 
+  msg = String(ax) + "#" + String(ay) + "#" + String(az) + "#" + String(gx) + "#" + String(gy) + "#" + String(gz); //El mensaje completo contiene el id del cliente y el numero de paquete enviado
+  Serial.println(msg);
 
 
-   // ---  Lectura acelerometro y giroscopio --- 
-   uint8_t buff[14];
-   I2Cread(MPU9250_ADDRESS, 0x3B, 14, buff);
+      // normalize the IMU data between -1 to 1 and store in the model's
+      // input tensor
+      tflInputTensor->data.f[samplesRead * 6 + 0] = (Ax ) / ACCELEROMETER_MAXIMUM;
+      tflInputTensor->data.f[samplesRead * 6 + 1] = (Ay ) / ACCELEROMETER_MAXIMUM;
+      tflInputTensor->data.f[samplesRead * 6 + 2] = (Az ) / ACCELEROMETER_MAXIMUM;
+      tflInputTensor->data.f[samplesRead * 6 + 3] = (Gx) / GYRO_MAXIMUM;
+      tflInputTensor->data.f[samplesRead * 6 + 4] = (Gy) / GYRO_MAXIMUM;
+      tflInputTensor->data.f[samplesRead * 6 + 5] = (Gz) / GYRO_MAXIMUM;
 
-   // Convertir registros acelerometro
-   //Serial.println("Acelerometro");
-   int16_t ax = (buff[0] << 8 | buff[1]);
-   int16_t ay = (buff[2] << 8 | buff[3]);
-   int16_t az = (buff[4] << 8 | buff[5]);
+      samplesRead++;
 
-   // Convertir registros giroscopio
-   //Serial.println("Giroscopio");
-   int16_t gx = (buff[8] << 8 | buff[9]);
-   int16_t gy = (buff[10] << 8 | buff[11]);
-   int16_t gz = (buff[12] << 8 | buff[13]);
+      if (samplesRead == numSamples) {
+        // Run inferencing
+        TfLiteStatus invokeStatus = tflInterpreter->Invoke();
+        if (invokeStatus != kTfLiteOk) {
+          Serial.println("Invoke failed!");
+          while (1);
+          return;
+        }
 
-
-
-
-//Calculo del filtro complementario 
+        // Loop through the output tensor values from the model
+        for (int i = 0; i < NUM_GESTURES; i++) {
+          Serial.print(GESTURES[i]);
+          Serial.print(": ");
+          Serial.println(tflOutputTensor->data.f[i], 6);
+        }
+        Serial.println();
+      }
+    
+  }
+/* //Calculo del filtro complementario 
   //Se obtienen convierten los valores para calcular el filtro complementario 
   processAccelData();
   processGyroData();
@@ -189,13 +248,9 @@ void loop() {
   
   //Calcular los ángulos con acelerometro
   float accel_ang_x=atan(ay/sqrt(pow(Ax,2) + pow(Az,2)))*(180.0/3.14);
-  float accel_ang_y=atan(-ax/sqrt(pow(Ay,2) + pow(Az,2)))*(180.0/3.14);
+  float accel_ang_y=atan(-ax/sqrt(pow(Ay,2) + pow(Az,2)))*(180.0/3.14); */
   
   //Calcular angulo de rotación con giroscopio y filtro complemento  
 
-  delay(100);
-//Envio de datos 
-  msg = String(ax) + "#" + String(ay) + "#" + String(az) + "#" + String(gx) + "#" + String(gy) + "#" + String(gz); //El mensaje completo contiene el id del cliente y el numero de paquete enviado
-  Serial.println(msg);
-  delay(10);
+
 }
