@@ -33,14 +33,15 @@ float ang_x_prev, ang_y_prev;
 const float AccelScaleFactor = 8192.0;
 const float GyroScaleFactor =65.5;
 
-const char* ssid = "QV_2G";
-const char* password = "2858351qv";
-
-//const char* ssid = "Ventana 2";
-//const char* password = "2858351Qv"; 
+const float accelerationThreshold = 2.5;
+const int numSamples = 62;
+int samplesRead = numSamples;
 
 //const char* ssid = "Agrosavia2.4G";
 //const char* password = "Agrosavia"; 
+
+const char* ssid = "FLIA-TIRADO-GOMEZ";
+const char* password = "14080515"; 
 
 int Id_client= 1; //Identificador del cliente
 int p = 0; // Identificador del paquete enviado 
@@ -102,9 +103,28 @@ pinMode(led_conn, OUTPUT);
 String msg = "";
 void loop() {
 
+  while (samplesRead == numSamples) {
+    
+   uint8_t buff[14];
+   I2Cread(MPU9250_ADDRESS, 0x3B, 14, buff);
+   int16_t ax = (buff[0] << 8 | buff[1]);
+   int16_t ay = (buff[2] << 8 | buff[3]);
+   int16_t az = (buff[4] << 8 | buff[5]);
 
+   float aSum = fabs(ax) + fabs(ay) + fabs(az);
 
-   // ---  Lectura acelerometro y giroscopio --- 
+  // check if it's above the threshold
+  if (aSum >= accelerationThreshold) {
+    // reset the sample read count
+    samplesRead = 0;
+    break;
+  }
+
+    }
+
+while (samplesRead < numSamples) {
+
+     // ---  Lectura acelerometro y giroscopio --- 
    uint8_t buff[14];
    I2Cread(MPU9250_ADDRESS, 0x3B, 14, buff);
 
@@ -163,7 +183,7 @@ void loop() {
 
   delay(100);
 //Envio de datos 
-  Udp.beginPacket("192.168.1.113", 9001); 
+  Udp.beginPacket("192.168.10.10", 9001); 
   //Udp.beginPacket("127.0.0.1", 9001);  //// Esta ip es la ip del computador servidor y el puerto debe coincidir
   digitalWrite(led_conn, HIGH);
   Serial.println("Start envio paquete");
@@ -183,7 +203,13 @@ void loop() {
   digitalWrite(led_conn, LOW);
 
   p = p + 1;
+  samplesRead++;
   delay(10);
+  
+  
+  }
+
+
 }
 
 

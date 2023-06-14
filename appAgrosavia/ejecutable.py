@@ -91,7 +91,7 @@ def ThreadActualizarSocket():
 	global NUMERO_MAXIMO_MODULOS
 	global tiempo_inicio_por_modulo
 	print("ThreadActualizarSocket Started... ")
-	UDP_IP = "192.168.1.113" #socket.gethostbyname(socket.gethostname())
+	UDP_IP = "192.168.1.122" #socket.gethostbyname(socket.gethostname())  !!!REVISAR CADA VEZ QUE SE HAGA TOMA DE DATOS
 	#UDP_IP = socket.gethostbyname(socket.gethostname())
 	#UDP_IP = socket.gethostbyname(socket.gethostname())
 	print(UDP_IP)
@@ -122,8 +122,8 @@ def ThreadActualizarSocket():
 			Gx = float(ArrayData[3])
 			Gy = float(ArrayData[4])
 			Gz = float(ArrayData[5])
-			ang_x=float(ArrayData[8])
-			ang_y=float(ArrayData[9])
+			#ang_x=float(ArrayData[8])
+			#ang_y=float(ArrayData[9])
 #			Mx = float(ArrayData[5])
 #			My = float(ArrayData[5])
 #			Mz = float(ArrayData[5])
@@ -142,10 +142,10 @@ def ThreadActualizarSocket():
 			#Write file con magnometro 	
 #			file.write( ( fechaYhora + "	 %.1f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f	 %.5f"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz,Mx, My, Mz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
             #Write file sin magnometro
-			#file.write( ( fechaYhora + ","+ "%.1f, %.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
+			file.write( ( fechaYhora + ","+ "%.1f, %.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
 			
 			#Write con filtro complementario 
-			file.write( ( fechaYhora + ","+ "%.1f, %.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz,ang_x,ang_y) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
+			#file.write( ( fechaYhora + ","+ "%.1f, %.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"%(NumeroPaquete, IdClient, Ax, Ay, Az, Gx, Gy, Gz,ang_x,ang_y) ) + "	" + str(ACTIVIDAD_ACTUAL[IdClient]) + "	\n" )
 			file.close() #Cada vez que el servidor recibe un dato lo guarda adecuamente en el archivo plano de texto
 					  	 #para evitar perdidas de datos
 		except Exception as e:

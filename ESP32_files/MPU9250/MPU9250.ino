@@ -23,18 +23,25 @@ const byte led_conn=27;
 #define    ACC_FULL_SCALE_8_G        0x10
 #define    ACC_FULL_SCALE_16_G       0x18
 
-long accelX, accelY, accelZ;
+float Ax, Ay, Az;
 long gyroX, gyroY, gyroZ;
 int16_t ax, ay, az, Tmp, gx, gy, gz;
-const float AccelScaleFactor = 16384.0;
-const float GyroScaleFactor =131;
+const float AccelScaleFactor = 8192.0;
+const float GyroScaleFactor =65.5;
+
+const float accelerationThreshold = 2.5;
+const int numSamples = 62;
+int samplesRead = numSamples;
 
 
-const char* ssid = "Ventana 2";
-const char* password = "2858351Qv"; 
+const char* ssid = "QV_2G";
+const char* password = "2858351qv"; 
 
 //const char* ssid = "Agrosavia2.4G";
 //const char* password = "Agrosavia"; 
+
+//const char* ssid = "FLIA-TIRADO-GOMEZ";
+//const char* password = "14080515"; 
 
 int Id_client= 1; //Identificador del cliente
 int p = 0; // Identificador del paquete enviado 
@@ -96,9 +103,32 @@ pinMode(led_conn, OUTPUT);
 String msg = "";
 void loop() {
 
+  while (samplesRead == numSamples) {
+    Serial.println("Estoy en hold");
+    
+   uint8_t buff[14];
+   I2Cread(MPU9250_ADDRESS, 0x3B, 14, buff);
+    ax = (buff[0] << 8 | buff[1]);
+    ay = (buff[2] << 8 | buff[3]);
+    az = (buff[4] << 8 | buff[5]);
+   processAccelData();
 
+   float aSum = fabs(Ax) + fabs(Ay) + fabs(Az);
+   Serial.println(aSum);
 
-   // ---  Lectura acelerometro y giroscopio --- 
+  // check if it's above the threshold
+  if (aSum >= accelerationThreshold) {
+    // reset the sample read count
+    samplesRead = 0;
+    break;
+  }
+
+    }
+
+while (samplesRead < numSamples) {
+  Serial.println("Empiezo a tomar datos");
+
+     // ---  Lectura acelerometro y giroscopio --- 
    uint8_t buff[14];
    I2Cread(MPU9250_ADDRESS, 0x3B, 14, buff);
 
@@ -133,17 +163,17 @@ void loop() {
 //   int16_t my = -(Mag[1] << 8 | Mag[0]);
 //   int16_t mz = -(Mag[5] << 8 | Mag[4]);
 
-//processAccelData()
-//processGyroData()
 //  printData();
 
-  Udp.beginPacket("192.168.0.108", 9001); 
+//Envio de datos 
+  Udp.beginPacket("192.168.1.122", 9001); 
   //Udp.beginPacket("127.0.0.1", 9001);  //// Esta ip es la ip del computador servidor y el puerto debe coincidir
   digitalWrite(led_conn, HIGH);
   Serial.println("Start envio paquete");
-  //msg = String(ax) + "#" + String(ay) + "#" + String(az) + "#" + String(gx) + "#" + String(gy) + "#" + String(gz) +  "#" + String(ax) +  "#" + String(ay) +  "#" + String(az) + "#" + String(Id_client) +  "#" + String(p); //El mensaje completo contiene el id del cliente y el numero de paquete enviad
+  //Se mandan las variables ax,ay,az,gx,gy,gz sin procesar ya que asi es mas facil normalizarlas para la red neuronal. Temperatura y angulo se envian al final  
   msg = String(ax) + "#" + String(ay) + "#" + String(az) + "#" + String(gx) + "#" + String(gy) + "#" + String(gz) +  "#" + String(Id_client) +  "#" + String(p); //El mensaje completo contiene el id del cliente y el numero de paquete enviad
-  Serial.print(msg);
+    //msg = String(ax) + "#" + String(ay) + "#" + String(az) + "#" + String(gx) + "#" + String(gy) + "#" + String(gz) +  "#" + String(Id_client) +  "#" + String(p) + "#" + String(ang_x)+ "#"  +String(ang_y) ; //El mensaje completo contiene el id del cliente y el numero de paquete enviado
+  //Serial.print(msg);
   for (int i = 0; i < msg.length(); i++)
   {
     int old = micros();
@@ -156,7 +186,13 @@ void loop() {
   digitalWrite(led_conn, LOW);
 
   p = p + 1;
+  samplesRead++;
   delay(10);
+  
+  
+  }
+
+
 }
 
 
@@ -187,18 +223,21 @@ void I2CwriteByte(uint8_t Address, uint8_t Register, uint8_t Data)
 
 
 
-//void processAccelData(){
-//  Ax = ax / AccelScaleFactor;
-//  Ay = ay / AccelScaleFactor; 
-//  Az = az / AccelScaleFactor;
-//}
-//
-//
-////
+void processAccelData(){
+ Ax = ax / AccelScaleFactor;
+ Ay = ay / AccelScaleFactor; 
+Az = az / AccelScaleFactor;
+
+Serial.print(Ax);
+Serial.print(Ay);
+Serial.print(Az);
+}
+
+
 //void processGyroData() {
-//  Gx = gyroX / GyroScaleFactor;
-//  Gy = gyroY / GyroScaleFactor; 
-//  Gz = gyroZ / GyroScaleFactor;
+// Gx = gyroX / GyroScaleFactor;
+// Gy = gyroY / GyroScaleFactor; 
+// Gz = gyroZ / GyroScaleFactor;
 //}
 
 void printData() {

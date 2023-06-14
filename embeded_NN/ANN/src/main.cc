@@ -42,7 +42,7 @@ const float GyroScaleFactor =65.5;
 const int ACCELEROMETER_MAXIMUM=4; //g
 const int GYRO_MAXIMUM=500;
 
-const int numSamples = 19;
+const int numSamples = 62;
 int samplesRead = numSamples;
 
 const char* ssid = "QV_2G";
@@ -199,7 +199,7 @@ void loop() {
      readData();
      processAccelData();
      processGyroData();
-  delay(100);
+  //delay(10);
 //Envio de datos 
   msg = String(ax) + "#" + String(ay) + "#" + String(az) + "#" + String(gx) + "#" + String(gy) + "#" + String(gz); //El mensaje completo contiene el id del cliente y el numero de paquete enviado
   
@@ -214,14 +214,13 @@ void loop() {
   Serial.print(valAy); */
 
 
-      // normalize the IMU data between -1 to 1 and store in the model's
-      // input tensor
-      tflInputTensor->data.f[samplesRead * 6 + 0] = (Ax );
-      tflInputTensor->data.f[samplesRead * 6 + 1] = (Ay );
-      tflInputTensor->data.f[samplesRead * 6 + 2] = (Az );
-      tflInputTensor->data.f[samplesRead * 6 + 3] = (Gx) ;
-      tflInputTensor->data.f[samplesRead * 6 + 4] = (Gy) ;
-      tflInputTensor->data.f[samplesRead * 6 + 5] = (Gz) ;
+      // The normalized data is stored into an input tensor
+      tflInputTensor->data.f[samplesRead * 6 + 0] = (Ax);
+      tflInputTensor->data.f[samplesRead * 6 + 1] = (Ay);
+      tflInputTensor->data.f[samplesRead * 6 + 2] = (Az);
+      tflInputTensor->data.f[samplesRead * 6 + 3] = (Gx);
+      tflInputTensor->data.f[samplesRead * 6 + 4] = (Gy);
+      tflInputTensor->data.f[samplesRead * 6 + 5] = (Gz);
 
       samplesRead++;
 
