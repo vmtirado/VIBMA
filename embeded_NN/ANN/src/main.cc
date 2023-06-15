@@ -30,8 +30,8 @@ const byte led_conn=27;
 #define    ACC_FULL_SCALE_8_G        0x10
 #define    ACC_FULL_SCALE_16_G       0x18
 
-float Ax, Ay, Az;
-long Gx,Gy,Gz;
+float Ax, Ay, Az, Gx,Gy,Gz;
+float norm_ax, norm_ay, norm_az, norm_gx, norm_gy, norm_gz;
 int16_t ax, ay, az, Tmp, gx, gy, gz;
 long tiempo_prev;
 float dt;
@@ -42,14 +42,9 @@ const float GyroScaleFactor =65.5;
 const int ACCELEROMETER_MAXIMUM=4; //g
 const int GYRO_MAXIMUM=500;
 
-const int numSamples = 62;
+const float accelerationThreshold = 2.5;
+const int numSamples = 124;
 int samplesRead = numSamples;
-
-const char* ssid = "QV_2G";
-const char* password = "2858351qv";
-
-//const char* ssid = "Agrosavia2.4G";
-//const char* password = "Agrosavia"; 
 
 int Id_client= 1; //Identificador del cliente
 int p = 0; // Identificador del paquete enviado 
@@ -75,9 +70,8 @@ byte tensorArena[tensorArenaSize] __attribute__((aligned(16)));
 
 // array to map gesture index to a name
 const char* GESTURES[] = {
- "left_15",
-  "up_15",
-  "front_15"
+ "slap",
+  "down"
 };
 
 #define NUM_GESTURES (sizeof(GESTURES) / sizeof(GESTURES[0]))
@@ -140,6 +134,22 @@ void processGyroData() {
   Gz = gz / GyroScaleFactor;
 }
 
+void normalize() {
+  float val=0.5;
+  norm_ax = (ax-(-32768.0))/(32767.0-(-32768.0));
+  norm_ay = (ay-(-32768.0))/(32767.0-(-32768.0));
+  norm_az = (az-(-32768.0))/(32767.0-(-32768.0));
+  norm_gx = (gx-(-32768.0))/(32767.0-(-32768.0));
+  norm_gy = (gy-(-32768.0))/(32767.0-(-32768.0));
+  norm_gz = (gz-(-32768.0))/(32767.0-(-32768.0));
+/*   Serial.print(String(int (norm_ax+1*100)));
+  Serial.print(",");
+  Serial.print(val);
+  Serial.print(",");
+  Serial.print(norm_az,20);
+  Serial.println(); */
+}
+
 void setup() {
 ////////////////////////SET UP ACELEROMETRO////////////////////////////////////////
 // put your setup code here, to run once:
@@ -183,26 +193,29 @@ Serial.println("Tf lite setup ended correctly");
 
 
 String msg = "";
+String norm_msg = "";
 void loop() {
 
   while (samplesRead == numSamples) {
-    samplesRead=0;
+  readData();
+  processAccelData();
+  float aSum = fabs(Ax) + fabs(Ay) + fabs(Az);
+  //Serial.println(aSum);
+
+  // check if it's above the threshold if it is the device is moving samples are reset data is taken once again
+  if (aSum >= accelerationThreshold) {
+    // reset the sample read count
+    samplesRead = 0;
+    break;
   }
+}
   
  while (samplesRead < numSamples) {
-    // check if new acceleration AND gyroscope data is available
-      // read the acceleration and gyroscope data
-      
-         // ---  Lectura acelerometro y giroscopio --- 
-	   uint8_t buff[14];
-	   I2Cread(MPU9250_ADDRESS, 0x3B, 14, buff);
      readData();
-     processAccelData();
-     processGyroData();
   //delay(10);
 //Envio de datos 
-  msg = String(ax) + "#" + String(ay) + "#" + String(az) + "#" + String(gx) + "#" + String(gy) + "#" + String(gz); //El mensaje completo contiene el id del cliente y el numero de paquete enviado
-  
+  msg += String(ax) + "," + String(ay) + "," + String(az) + "," + String(gx) + "," + String(gy) + "," + String(gz)+ "\n"; //El mensaje completo contiene el id del cliente y el numero de paquete enviado
+  //Serial.println(msg);
 /*   int16_t valAx=Ax/ACCELEROMETER_MAXIMUM;
   int16_t valAy=Ay/ACCELEROMETER_MAXIMUM;
   int16_t valAz=Az/ACCELEROMETER_MAXIMUM;
@@ -213,14 +226,17 @@ void loop() {
   Serial.print(',');
   Serial.print(valAy); */
 
-
+      normalize();
+      Serial.print(norm_ax);
+      Serial.print(",");
+      Serial.println();
       // The normalized data is stored into an input tensor
-      tflInputTensor->data.f[samplesRead * 6 + 0] = (Ax);
-      tflInputTensor->data.f[samplesRead * 6 + 1] = (Ay);
-      tflInputTensor->data.f[samplesRead * 6 + 2] = (Az);
-      tflInputTensor->data.f[samplesRead * 6 + 3] = (Gx);
-      tflInputTensor->data.f[samplesRead * 6 + 4] = (Gy);
-      tflInputTensor->data.f[samplesRead * 6 + 5] = (Gz);
+      tflInputTensor->data.f[samplesRead * 6 + 0] = (norm_ax);
+      tflInputTensor->data.f[samplesRead * 6 + 1] = (norm_ay);
+      tflInputTensor->data.f[samplesRead * 6 + 2] = (norm_az);
+      tflInputTensor->data.f[samplesRead * 6 + 3] = (norm_gx);
+      tflInputTensor->data.f[samplesRead * 6 + 4] = (norm_gy);
+      tflInputTensor->data.f[samplesRead * 6 + 5] = (norm_gz);
 
       samplesRead++;
 
@@ -232,7 +248,10 @@ void loop() {
           while (1);
           return;
         }
-
+        Serial.println(msg);
+        //Serial.println(norm_msg);
+        msg="";
+        norm_msg="";
         // Loop through the output tensor values from the model
         for (int i = 0; i < NUM_GESTURES; i++) {
           Serial.print(GESTURES[i]);
