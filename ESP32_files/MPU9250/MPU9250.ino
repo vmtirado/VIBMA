@@ -29,19 +29,19 @@ int16_t ax, ay, az, Tmp, gx, gy, gz;
 const float AccelScaleFactor = 8192.0;
 const float GyroScaleFactor =65.5;
 
-const float accelerationThreshold = 2.5;
+const float accelerationThreshold = 2.5 ;
 const int numSamples = 62;
 int samplesRead = numSamples;
 
 
-const char* ssid = "QV_2G";
-const char* password = "2858351qv"; 
+//const char* ssid = "QV_2G";
+//const char* password = "2858351qv"; 
 
 //const char* ssid = "Agrosavia2.4G";
 //const char* password = "Agrosavia"; 
 
-//const char* ssid = "FLIA-TIRADO-GOMEZ";
-//const char* password = "14080515"; 
+const char* ssid = "FLIA-TIRADO-GOMEZ";
+const char* password = "14080515"; 
 
 int Id_client= 1; //Identificador del cliente
 int p = 0; // Identificador del paquete enviado 
@@ -103,6 +103,7 @@ pinMode(led_conn, OUTPUT);
 String msg = "";
 void loop() {
 
+  //Once the samples needed are accquired stop the take
   while (samplesRead == numSamples) {
     Serial.println("Estoy en hold");
     
@@ -112,11 +113,12 @@ void loop() {
     ay = (buff[2] << 8 | buff[3]);
     az = (buff[4] << 8 | buff[5]);
    processAccelData();
-
+   
+   //In order to start taking taking data again motion has to be detected. 
    float aSum = fabs(Ax) + fabs(Ay) + fabs(Az);
    Serial.println(aSum);
 
-  // check if it's above the threshold
+  // check if it's above the threshold if it is the device is moving samples are reset data is taken once again
   if (aSum >= accelerationThreshold) {
     // reset the sample read count
     samplesRead = 0;
@@ -166,7 +168,7 @@ while (samplesRead < numSamples) {
 //  printData();
 
 //Envio de datos 
-  Udp.beginPacket("192.168.1.122", 9001); 
+  Udp.beginPacket("192.168.10.10", 9001); 
   //Udp.beginPacket("127.0.0.1", 9001);  //// Esta ip es la ip del computador servidor y el puerto debe coincidir
   digitalWrite(led_conn, HIGH);
   Serial.println("Start envio paquete");

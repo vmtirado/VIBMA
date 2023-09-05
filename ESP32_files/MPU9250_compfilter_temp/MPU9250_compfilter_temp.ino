@@ -23,8 +23,7 @@ const byte led_conn=27;
 #define    ACC_FULL_SCALE_8_G        0x10
 #define    ACC_FULL_SCALE_16_G       0x18
 
-long Ax, Ay, Az;
-long Gx,Gy,Gz;
+float Ax, Ay, Az,Gx,Gy,Gz;
 int16_t ax, ay, az, Tmp, gx, gy, gz;
 long tiempo_prev;
 float dt;
@@ -33,9 +32,13 @@ float ang_x_prev, ang_y_prev;
 const float AccelScaleFactor = 8192.0;
 const float GyroScaleFactor =65.5;
 
-const float accelerationThreshold = 2.5;
+const float accelerationThreshold = 2.5 ;
 const int numSamples = 62;
 int samplesRead = numSamples;
+
+
+//const char* ssid = "QV_2G";
+//const char* password = "2858351qv"; 
 
 //const char* ssid = "Agrosavia2.4G";
 //const char* password = "Agrosavia"; 
@@ -103,17 +106,22 @@ pinMode(led_conn, OUTPUT);
 String msg = "";
 void loop() {
 
+  //Once the samples needed are accquired stop the take
   while (samplesRead == numSamples) {
+    Serial.println("Estoy en hold");
     
    uint8_t buff[14];
    I2Cread(MPU9250_ADDRESS, 0x3B, 14, buff);
-   int16_t ax = (buff[0] << 8 | buff[1]);
-   int16_t ay = (buff[2] << 8 | buff[3]);
-   int16_t az = (buff[4] << 8 | buff[5]);
+    ax = (buff[0] << 8 | buff[1]);
+    ay = (buff[2] << 8 | buff[3]);
+    az = (buff[4] << 8 | buff[5]);
+   processAccelData();
+   
+   //In order to start taking taking data again motion has to be detected. 
+   float aSum = fabs(Ax) + fabs(Ay) + fabs(Az);
+   Serial.println(aSum);
 
-   float aSum = fabs(ax) + fabs(ay) + fabs(az);
-
-  // check if it's above the threshold
+  // check if it's above the threshold if it is the device is moving samples are reset data is taken once again
   if (aSum >= accelerationThreshold) {
     // reset the sample read count
     samplesRead = 0;
@@ -123,6 +131,7 @@ void loop() {
     }
 
 while (samplesRead < numSamples) {
+  Serial.println("Empiezo a tomar datos");
 
      // ---  Lectura acelerometro y giroscopio --- 
    uint8_t buff[14];
@@ -180,7 +189,6 @@ while (samplesRead < numSamples) {
   
   ang_x_prev=ang_x;
   ang_y_prev=ang_y;
-
   delay(100);
 //Envio de datos 
   Udp.beginPacket("192.168.10.10", 9001); 
@@ -188,9 +196,9 @@ while (samplesRead < numSamples) {
   digitalWrite(led_conn, HIGH);
   Serial.println("Start envio paquete");
   //Se mandan las variables ax,ay,az,gx,gy,gz sin procesar ya que asi es mas facil normalizarlas para la red neuronal. Temperatura y angulo se envian al final  
-  //msg = String(ax) + "#" + String(ay) + "#" + String(az) + "#" + String(gx) + "#" + String(gy) + "#" + String(gz) +  "#" + String(ax) +  "#" + String(ay) +  "#" + String(az) + "#" + String(Id_client) +  "#" + String(p); //El mensaje completo contiene el id del cliente y el numero de paquete enviad
+  //msg = String(ax) + "#" + String(ay) + "#" + String(az) + "#" + String(gx) + "#" + String(gy) + "#" + String(gz) +  "#" + String(Id_client) +  "#" + String(p); //El mensaje completo contiene el id del cliente y el numero de paquete enviad
   msg = String(ax) + "#" + String(ay) + "#" + String(az) + "#" + String(gx) + "#" + String(gy) + "#" + String(gz) +  "#" + String(Id_client) +  "#" + String(p) + "#" + String(ang_x)+ "#"  +String(ang_y) ; //El mensaje completo contiene el id del cliente y el numero de paquete enviado
-  Serial.print(msg);
+  //Serial.print(msg);
   for (int i = 0; i < msg.length(); i++)
   {
     int old = micros();
@@ -241,27 +249,30 @@ void I2CwriteByte(uint8_t Address, uint8_t Register, uint8_t Data)
 
 
 void processAccelData(){
-  Ax = ax / AccelScaleFactor;
-  Ay = ay / AccelScaleFactor; 
-  Az = az / AccelScaleFactor;
+ Ax = ax / AccelScaleFactor;
+ Ay = ay / AccelScaleFactor; 
+Az = az / AccelScaleFactor;
+
+Serial.print(Ax);
+Serial.print(Ay);
+Serial.print(Az);
 }
 
 
-//
 void processGyroData() {
-  Gx = gx / GyroScaleFactor;
-  Gy = gy / GyroScaleFactor; 
-  Gz = gz / GyroScaleFactor;
+ Gx = gx / GyroScaleFactor;
+ Gy = gy / GyroScaleFactor; 
+ Gz = gz / GyroScaleFactor;
 }
 
-//void printData() {
-//   Serial.print(Ax); Serial.print(" , ");
-//   Serial.print(Ay); Serial.print(" , ");
-//   Serial.print(Az); Serial.print(" , ");
-//   Serial.print(Gx); Serial.print(" , ");
-//   Serial.print(Gy); Serial.print(" , ");
-//   Serial.print(Gz); Serial.print("\n");
-//   
-//   // Fin medicion
-//   Serial.println("");
-//}
+void printData() {
+   Serial.print(ax); Serial.print(" , ");
+   Serial.print(ay); Serial.print(" , ");
+   Serial.print(az); Serial.print(" , ");
+   Serial.print(gx); Serial.print(" , ");
+   Serial.print(gy); Serial.print(" , ");
+   Serial.print(gz); Serial.print("\n");
+   
+   // Fin medicion
+   Serial.println("");
+}
